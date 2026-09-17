@@ -1,0 +1,15 @@
+{
+  "schemaVersion": 1,
+  "gameId": "critical-mass",
+  "apiVersion": 1,
+  "defaultLocale": "en",
+  "locales": {
+    "en": {
+      "name": "Critical Mass",
+      "description": "Trigger a nuclear fission chain reaction on a 3x3 toroidal core. 18 conduit bonds, certified 96.00% on-chain RTP, zero wei drift, up to 49.25x Meltdown Jackpot."
+    }
+  },
+  "presentation": {
+    "preferDarkTheme": true
+  }
+}
