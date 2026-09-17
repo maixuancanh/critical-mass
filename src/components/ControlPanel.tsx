@@ -1,6 +1,6 @@
 // src/components/ControlPanel.tsx
 import React, { useState } from 'react';
-import { Volume2, VolumeX, Zap, Radio, ShieldCheck, Flame } from 'lucide-react';
+import { Volume2, VolumeX, Zap, Radio, ShieldCheck, Flame, Radiation } from 'lucide-react';
 import { geigerAudio } from '../audio/GeigerAudio';
 
 interface ControlPanelProps {
@@ -130,9 +130,12 @@ export const ControlPanel: React.FC<ControlPanelProps> = ({
       {/* Target Chamber Selection */}
       <div>
         <div className="flex justify-between items-center text-xs text-emerald-300 mb-2">
-          <span className="font-semibold tracking-wide">TARGET FUEL CHAMBER</span>
+          <div className="flex items-center gap-1.5 font-semibold tracking-wide">
+            <Radiation size={14} className="text-emerald-400" />
+            <span>TARGET FUEL CHAMBER</span>
+          </div>
           <span className="text-emerald-400/60 text-[11px]">
-            ACTIVE: <strong className="text-emerald-300">ROD {selectedChamber + 1}</strong>
+            ACTIVE: <strong className="text-emerald-300">ROD 0{selectedChamber + 1}</strong>
           </span>
         </div>
 
@@ -144,13 +147,14 @@ export const ControlPanel: React.FC<ControlPanelProps> = ({
                 key={idx}
                 disabled={isReacting}
                 onClick={() => handleChamberChange(idx)}
-                className={`py-2 text-xs font-bold rounded-md border transition-all duration-150 flex flex-col items-center justify-center ${
+                className={`py-1.5 text-xs font-bold rounded-md border transition-all duration-150 flex flex-col items-center justify-center gap-0.5 ${
                   isSel
                     ? 'bg-emerald-500 text-black border-emerald-300 shadow-[0_0_12px_rgba(16,185,129,0.8)] scale-105'
                     : 'bg-emerald-950/30 text-emerald-400 border-emerald-800/50 hover:bg-emerald-900/40 hover:border-emerald-700'
                 }`}
               >
-                <span>{idx + 1}</span>
+                <Radiation size={11} className={isSel ? 'text-black' : 'text-emerald-500/70'} />
+                <span className="text-[11px] font-mono leading-none">0{idx + 1}</span>
               </button>
             );
           })}

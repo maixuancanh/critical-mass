@@ -279,46 +279,99 @@ export const ReactorCanvas: React.FC<ReactorCanvasProps> = ({
         const coreGrad = ctx.createRadialGradient(pos.x, pos.y, 0, pos.x, pos.y, radius);
         if (isBreached) {
           if (clusterSize === 9) {
-            coreGrad.addColorStop(0, '#ffffff');
-            coreGrad.addColorStop(0.3, '#ff0055');
-            coreGrad.addColorStop(1, '#990022');
+            coreGrad.addColorStop(0, '#2b0008');
+            coreGrad.addColorStop(0.6, '#4c0519');
+            coreGrad.addColorStop(1, '#9f1239');
           } else {
-            coreGrad.addColorStop(0, '#fff4cc');
-            coreGrad.addColorStop(0.4, '#ff9900');
-            coreGrad.addColorStop(1, '#662200');
+            coreGrad.addColorStop(0, '#1c0a00');
+            coreGrad.addColorStop(0.6, '#451a03');
+            coreGrad.addColorStop(1, '#9a3412');
           }
         } else if (isSelected) {
-          coreGrad.addColorStop(0, '#bbf7d0');
-          coreGrad.addColorStop(0.5, '#10b981');
-          coreGrad.addColorStop(1, '#064e3b');
+          coreGrad.addColorStop(0, '#022414');
+          coreGrad.addColorStop(0.7, '#064e3b');
+          coreGrad.addColorStop(1, '#059669');
         } else {
           // Idle Cherenkov radiation faint glow
-          const glowAlpha = 0.2 + Math.sin(time * 2 + idx) * 0.08;
-          coreGrad.addColorStop(0, `rgba(16, 185, 129, ${glowAlpha + 0.2})`);
-          coreGrad.addColorStop(1, 'rgba(6, 78, 59, 0.1)');
+          const glowAlpha = 0.15 + Math.sin(time * 2 + idx) * 0.05;
+          coreGrad.addColorStop(0, '#02180d');
+          coreGrad.addColorStop(0.7, `rgba(6, 78, 59, ${glowAlpha + 0.2})`);
+          coreGrad.addColorStop(1, '#021208');
         }
         ctx.fillStyle = coreGrad;
         ctx.beginPath();
-        ctx.arc(pos.x, pos.y, radius * 0.75, 0, Math.PI * 2);
+        ctx.arc(pos.x, pos.y, radius * 0.78, 0, Math.PI * 2);
         ctx.fill();
 
-        // Technical Label
-        ctx.font = 'bold 12px "Share Tech Mono", monospace';
+        // Chamber Visual Icon: Nuclear Core Trefoil & Status Badge
+        const iconY = pos.y - 4;
+        const iconR = isSelected ? 12 : 10;
+        const iconRot = isBreached
+          ? (time * 5 + idx)
+          : isSelected
+          ? (time * 1.2)
+          : (time * 0.35 + idx * 0.7);
+
+        // Draw Nuclear Radiation Trefoil Icon
+        ctx.save();
+        ctx.translate(pos.x, iconY);
+        ctx.rotate(iconRot);
+
+        const trefoilColor = isBreached
+          ? (clusterSize === 9 ? '#ffffff' : '#fef08a')
+          : isSelected
+          ? '#a7f3d0'
+          : 'rgba(52, 211, 153, 0.9)';
+
+        if (isBreached) {
+          ctx.shadowColor = clusterSize === 9 ? '#ff0055' : '#f59e0b';
+          ctx.shadowBlur = 12;
+        } else if (isSelected) {
+          ctx.shadowColor = '#10b981';
+          ctx.shadowBlur = 8;
+        } else {
+          ctx.shadowColor = '#059669';
+          ctx.shadowBlur = 4;
+        }
+
+        // Trefoil center hub
+        ctx.fillStyle = trefoilColor;
+        ctx.beginPath();
+        ctx.arc(0, 0, iconR * 0.28, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Trefoil 3 radiating blades
+        for (let b = 0; b < 3; b++) {
+          const bladeAngle = (b * 2 * Math.PI) / 3 - Math.PI / 2;
+          const bladeArc = Math.PI / 3.4;
+          ctx.beginPath();
+          ctx.arc(0, 0, iconR * 0.95, bladeAngle - bladeArc / 2, bladeAngle + bladeArc / 2);
+          ctx.arc(0, 0, iconR * 0.42, bladeAngle + bladeArc / 2, bladeAngle - bladeArc / 2, true);
+          ctx.closePath();
+          ctx.fillStyle = trefoilColor;
+          ctx.fill();
+        }
+        ctx.restore();
+
+        // High-Tech Identifier Sub-Badge below Icon
         ctx.textAlign = 'center';
         ctx.textBaseline = 'middle';
 
         if (isBreached) {
-          ctx.fillStyle = '#ffffff';
+          ctx.font = 'bold 10px "Share Tech Mono", monospace';
+          ctx.fillStyle = clusterSize === 9 ? '#ff3366' : '#fbbf24';
           ctx.shadowColor = '#000000';
-          ctx.shadowBlur = 4;
-          ctx.fillText(clusterSize === 9 ? 'MELT' : 'CRIT', pos.x, pos.y);
+          ctx.shadowBlur = 3;
+          ctx.fillText(clusterSize === 9 ? 'MELT' : 'CRIT', pos.x, pos.y + 14);
           ctx.shadowBlur = 0;
         } else if (isSelected) {
-          ctx.fillStyle = '#ffffff';
-          ctx.fillText(`ROD ${idx + 1}`, pos.x, pos.y);
+          ctx.font = 'bold 9px "Share Tech Mono", monospace';
+          ctx.fillStyle = '#10b981';
+          ctx.fillText(`ROD 0${idx + 1}`, pos.x, pos.y + 14);
         } else {
-          ctx.fillStyle = 'rgba(16, 185, 129, 0.75)';
-          ctx.fillText(`CH-${idx + 1}`, pos.x, pos.y);
+          ctx.font = '9px "Share Tech Mono", monospace';
+          ctx.fillStyle = 'rgba(16, 185, 129, 0.65)';
+          ctx.fillText(`0${idx + 1}`, pos.x, pos.y + 14);
         }
 
         // Animated Targeting Reticle for Selected Chamber
