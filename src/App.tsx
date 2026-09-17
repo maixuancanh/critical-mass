@@ -283,9 +283,8 @@ export const App: React.FC = () => {
           </div>
         </div>
 
-        {/* Technical Hazard Divider & Footer */}
-        <div className="h-1 hazard-stripes-subtle rounded-full opacity-50 mt-2"></div>
-        <footer className="mt-2 pt-2 text-xs text-emerald-500/60 flex flex-wrap justify-between items-center gap-3">
+        {/* Technical Footer */}
+        <footer className="mt-auto border-t border-emerald-500/20 pt-4 text-xs text-emerald-500/60 flex flex-wrap justify-between items-center gap-3">
           <div className="flex items-center gap-2">
             <Shield size={14} className="text-emerald-400" />
             <span>CRITICAL MASS © 2026 // CHAIN CASINO SDK // BASE L2</span>

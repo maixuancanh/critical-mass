@@ -7,35 +7,22 @@
   background-color: #030805;
 }
 
-/* Nuclear Reactor Subterranean Facility Background */
+/* Nuclear Reactor Subterranean Facility Background - Clean Atmospheric Deep Glow */
 .nuclear-facility-bg {
   position: relative;
   background-color: #020704;
   background-image: 
-    /* 1. Vignette shadow from viewport edges */
-    radial-gradient(circle at 50% 50%, transparent 35%, rgba(1, 4, 2, 0.94) 100%),
-    /* 2. Deep Cherenkov Core Pool Glow (Cyan-Teal Glow behind Reactor Canvas) */
-    radial-gradient(ellipse 70% 60% at 32% 42%, rgba(6, 182, 212, 0.22) 0%, rgba(16, 185, 129, 0.14) 40%, transparent 75%),
-    /* 3. Amber Radiation Thermal Zone (Behind Firing Console) */
-    radial-gradient(circle at 82% 38%, rgba(245, 158, 11, 0.13) 0%, rgba(217, 119, 6, 0.05) 45%, transparent 65%),
-    /* 4. Deep Sub-level Reactor Abyss Glow */
-    radial-gradient(ellipse 80% 50% at 50% 100%, rgba(4, 52, 40, 0.6) 0%, transparent 65%),
-    /* 5. Hexagonal Containment Honeycomb Mesh */
-    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='28' height='49' viewBox='0 0 28 49'%3E%3Cpath fill-rule='evenodd' d='M13.99 9.25l13 7.5v15l-13 7.5L1 31.75v-15l12.99-7.5zM3 17.9v12.7l11 6.35 11-6.35V17.9L14 11.55 3 17.9z' fill='%2310b981' fill-opacity='0.065'/%3E%3C/svg%3E"),
-    /* 6. Technical Reactor Blueprint Grid */
-    linear-gradient(rgba(16, 185, 129, 0.07) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(16, 185, 129, 0.07) 1px, transparent 1px),
-    /* 7. Reinforced Subterranean Titanium Foundation */
-    radial-gradient(circle at 50% 50%, #06190e 0%, #010502 100%);
-  background-size: 
-    100% 100%,
-    100% 100%,
-    100% 100%,
-    100% 100%,
-    28px 49px,
-    44px 44px,
-    44px 44px,
-    100% 100%;
+    /* 1. Cinematic Vignette shadow */
+    radial-gradient(circle at 50% 50%, transparent 40%, rgba(1, 4, 2, 0.95) 100%),
+    /* 2. Deep Cherenkov Core Pool Glow (Soft Cyan-Teal Aura behind Canvas) */
+    radial-gradient(ellipse 75% 65% at 30% 40%, rgba(6, 182, 212, 0.18) 0%, rgba(16, 185, 129, 0.10) 45%, transparent 75%),
+    /* 3. Amber Radiation Thermal Zone (Soft Warm Glow behind Console) */
+    radial-gradient(circle at 82% 38%, rgba(245, 158, 11, 0.11) 0%, rgba(217, 119, 6, 0.04) 45%, transparent 65%),
+    /* 4. Deep Sub-level Abyss Glow */
+    radial-gradient(ellipse 80% 50% at 50% 100%, rgba(4, 52, 40, 0.5) 0%, transparent 70%),
+    /* 5. Smooth Subterranean Gradient Foundation */
+    radial-gradient(circle at 50% 40%, #06190e 0%, #010402 100%);
+  background-size: 100% 100%;
 }
 
 body {
@@ -47,7 +34,7 @@ body {
   -webkit-font-smoothing: antialiased;
 }
 
-/* CRT Screen Scanlines & Subtle Curvature */
+/* CRT Screen Overlay - Clean Smooth Vignette (No scanline stripes) */
 .crt-overlay {
   position: fixed;
   top: 0;
@@ -55,12 +42,8 @@ body {
   width: 100vw;
   height: 100vh;
   pointer-events: none;
-  background: 
-    linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.28) 50%),
-    linear-gradient(90deg, rgba(255, 0, 0, 0.02), rgba(0, 255, 0, 0.01), rgba(0, 0, 255, 0.02));
-  background-size: 100% 3px, 6px 100%;
   z-index: 999;
-  box-shadow: inset 0 0 100px rgba(0, 0, 0, 0.75);
+  box-shadow: inset 0 0 100px rgba(0, 0, 0, 0.65);
 }
 
 /* Industrial Hazard Stripes */
