@@ -8,6 +8,8 @@ class GeigerAudioEngine {
   private backgroundInterval: number | null = null;
   private humOsc: OscillatorNode | null = null;
   private humGain: GainNode | null = null;
+  private bgmAudio: HTMLAudioElement | null = null;
+  private bgmVolume: number = 0.25; // 25% volume per user request
 
   private initContext() {
     if (!this.ctx && typeof window !== 'undefined') {
@@ -21,6 +23,9 @@ class GeigerAudioEngine {
 
   public toggleMute(): boolean {
     this.isMuted = !this.isMuted;
+    if (this.bgmAudio) {
+      this.bgmAudio.muted = this.isMuted;
+    }
     if (this.isMuted) {
       this.stopBackground();
       this.stopHum();
@@ -291,18 +296,72 @@ class GeigerAudioEngine {
     }
   }
 
-  // Ambient background clicks
-  public startBackground() {
-    if (this.backgroundInterval) return;
-    this.startHum();
-    this.backgroundInterval = window.setInterval(() => {
-      if (Math.random() < 0.38) {
-        this.playGeigerClick(0.35);
+  // Background Music (DeepCave.mp3) initialization
+  private initBgm() {
+    if (typeof window === 'undefined') return;
+    if (!this.bgmAudio) {
+      try {
+        this.bgmAudio = new Audio('/audio/DeepCave.mp3');
+        this.bgmAudio.loop = true;
+        this.bgmAudio.volume = this.bgmVolume;
+        this.bgmAudio.preload = 'auto';
+      } catch {
+        // Fallback to procedural audio
       }
-    }, 550);
+    }
+  }
+
+  public setBgmVolume(vol: number) {
+    this.bgmVolume = Math.max(0, Math.min(1, vol));
+    if (this.bgmAudio) {
+      this.bgmAudio.volume = this.bgmVolume;
+    }
+  }
+
+  // Ambient background music (DeepCave.mp3 @ 25% volume) & Geiger clicks
+  public startBackground() {
+    this.initBgm();
+
+    // Play DeepCave.mp3 at requested 25% volume
+    if (this.bgmAudio && !this.isMuted) {
+      this.bgmAudio.volume = this.bgmVolume;
+      const playPromise = this.bgmAudio.play();
+      if (playPromise !== undefined) {
+        playPromise.catch(() => {
+          // Browser requires user interaction before autoplay
+          const onUserGesture = () => {
+            if (this.bgmAudio && !this.isMuted) {
+              this.bgmAudio.play().catch(() => {});
+            }
+            window.removeEventListener('click', onUserGesture);
+            window.removeEventListener('keydown', onUserGesture);
+            window.removeEventListener('touchstart', onUserGesture);
+          };
+          window.addEventListener('click', onUserGesture, { once: true });
+          window.addEventListener('keydown', onUserGesture, { once: true });
+          window.addEventListener('touchstart', onUserGesture, { once: true });
+        });
+      }
+    }
+
+    // Occasional subtle procedural clicks to maintain nuclear atmosphere
+    if (!this.backgroundInterval) {
+      this.backgroundInterval = window.setInterval(() => {
+        if (Math.random() < 0.22) {
+          this.playGeigerClick(0.2);
+        }
+      }, 700);
+    }
   }
 
   public stopBackground() {
+    if (this.bgmAudio) {
+      try {
+        this.bgmAudio.pause();
+      } catch {
+        // Ignore
+      }
+    }
     if (this.backgroundInterval) {
       clearInterval(this.backgroundInterval);
       this.backgroundInterval = null;
