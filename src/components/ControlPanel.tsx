@@ -230,52 +230,82 @@ export const ControlPanel: React.FC<ControlPanelProps> = ({
         </div>
       </div>
 
-      {/* Outcome Result Box */}
-      {lastPayout !== null && !isReacting && (
-        <div
-          className={`p-3 rounded-lg border font-mono transition-all ${
-            isMeltdown
-              ? 'bg-rose-950/80 border-rose-500 text-rose-200 shadow-[0_0_25px_rgba(244,63,94,0.7)] animate-pulse'
-              : parseFloat(lastPayout) > 0
-              ? 'bg-amber-950/60 border-amber-500 text-amber-200 shadow-[0_0_15px_rgba(245,158,11,0.5)]'
-              : 'bg-zinc-950/80 border-zinc-800 text-zinc-400'
-          }`}
-        >
-          <div className="flex items-center justify-between text-xs font-bold">
-            <span className="flex items-center gap-1.5">
-              {isMeltdown ? (
-                <Flame size={16} className="text-rose-400" />
-              ) : (
-                <ShieldCheck size={16} className={parseFloat(lastPayout) > 0 ? 'text-amber-400' : 'text-zinc-400'} />
-              )}
-              {isMeltdown
-                ? '★ CRITICAL MELTDOWN JACKPOT ★'
-                : parseFloat(lastPayout) > 0
-                ? 'FISSION CHAIN PROPAGATED'
-                : 'CONTAINMENT STABLE (NO YIELD)'}
-            </span>
-            <span className="text-xs opacity-75">
-              {clusterSize}/9 CHAMBERS
-            </span>
-          </div>
-          <div className="text-lg font-bold mt-1 text-center">
-            {parseFloat(lastPayout) > 0 ? (
-              <span className="text-emerald-300 font-extrabold text-xl">
-                +{lastPayout} USDC ({lastMultiplier?.toFixed(2)}x)
+      {/* Permanent Fixed-Height Status / Outcome Telemetry Box (Prevents any layout shift) */}
+      <div className="h-[68px] min-h-[68px] max-h-[68px] w-full">
+        {isReacting ? (
+          <div className="h-full p-2.5 rounded-lg border border-amber-500/50 bg-amber-950/40 text-amber-300 flex flex-col justify-center font-mono shadow-[0_0_15px_rgba(245,158,11,0.2)]">
+            <div className="flex items-center justify-between text-xs font-bold">
+              <span className="flex items-center gap-1.5 animate-pulse text-amber-300">
+                <Zap size={15} className="text-amber-400 fill-current" />
+                <span>CASCADE IN PROGRESS...</span>
               </span>
-            ) : (
-              <span className="text-zinc-500">0.00 USDC (0.00x)</span>
-            )}
+              <span className="text-xs text-amber-400/90 font-mono">
+                {clusterSize}/9 BREACHED
+              </span>
+            </div>
+            <div className="text-sm font-bold text-center text-amber-200 mt-1 tracking-wider">
+              CALCULATING CRITICAL MASS
+            </div>
           </div>
-        </div>
-      )}
+        ) : lastPayout !== null ? (
+          <div
+            className={`h-full p-2.5 rounded-lg border font-mono flex flex-col justify-center transition-all ${
+              isMeltdown
+                ? 'bg-rose-950/80 border-rose-500 text-rose-200 shadow-[0_0_25px_rgba(244,63,94,0.7)] animate-pulse'
+                : parseFloat(lastPayout) > 0
+                ? 'bg-amber-950/60 border-amber-500 text-amber-200 shadow-[0_0_15px_rgba(245,158,11,0.5)]'
+                : 'bg-zinc-950/80 border-zinc-800 text-zinc-400'
+            }`}
+          >
+            <div className="flex items-center justify-between text-xs font-bold">
+              <span className="flex items-center gap-1.5">
+                {isMeltdown ? (
+                  <Flame size={15} className="text-rose-400" />
+                ) : (
+                  <ShieldCheck size={15} className={parseFloat(lastPayout) > 0 ? 'text-amber-400' : 'text-zinc-400'} />
+                )}
+                {isMeltdown
+                  ? '★ CRITICAL MELTDOWN JACKPOT ★'
+                  : parseFloat(lastPayout) > 0
+                  ? 'FISSION CHAIN PROPAGATED'
+                  : 'CONTAINMENT STABLE (NO YIELD)'}
+              </span>
+              <span className="text-xs opacity-75">{clusterSize}/9 CHAMBERS</span>
+            </div>
+            <div className="text-base font-bold mt-0.5 text-center">
+              {parseFloat(lastPayout) > 0 ? (
+                <span className="text-emerald-300 font-extrabold text-lg">
+                  +{lastPayout} USDC ({lastMultiplier?.toFixed(2)}x)
+                </span>
+              ) : (
+                <span className="text-zinc-500">0.00 USDC (0.00x)</span>
+              )}
+            </div>
+          </div>
+        ) : (
+          <div className="h-full p-2.5 rounded-lg border border-emerald-500/25 bg-black/40 text-emerald-400/80 flex flex-col justify-center font-mono">
+            <div className="flex items-center justify-between text-xs font-bold text-emerald-300">
+              <span className="flex items-center gap-1.5">
+                <ShieldCheck size={15} className="text-emerald-400" />
+                <span>REACTOR STATUS: ONLINE</span>
+              </span>
+              <span className="text-[10px] px-1.5 py-0.5 rounded bg-emerald-950/80 border border-emerald-500/30 text-emerald-400">
+                STANDBY
+              </span>
+            </div>
+            <div className="text-xs text-center text-emerald-400/60 mt-1 font-mono tracking-wide">
+              SELECT CHAMBER (01–09) & ENGAGE TRIGGER
+            </div>
+          </div>
+        )}
+      </div>
 
-      {/* Heavy Industrial Trigger Button */}
+      {/* Heavy Industrial Trigger Button (Fixed Height) */}
       <div className="relative pt-1">
         <button
           disabled={isReacting || !isWalletReady}
           onClick={onTrigger}
-          className={`w-full py-4 px-4 rounded-xl font-bold text-sm tracking-widest uppercase transition-all duration-150 flex items-center justify-center gap-3 border-2 shadow-lg ${
+          className={`w-full h-14 px-4 rounded-xl font-bold text-sm tracking-widest uppercase transition-all duration-150 flex items-center justify-center gap-3 border-2 shadow-lg ${
             isReacting
               ? 'bg-amber-600/30 border-amber-500 text-amber-300 cursor-not-allowed animate-pulse shadow-[0_0_20px_rgba(245,158,11,0.4)]'
               : !isWalletReady
