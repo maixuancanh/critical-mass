@@ -10,6 +10,7 @@
     }
   },
   "presentation": {
-    "preferDarkTheme": true
+    "preferDarkTheme": true,
+    "icon": "/logo.svg"
   }
 }

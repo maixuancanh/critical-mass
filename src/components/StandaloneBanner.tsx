@@ -27,21 +27,26 @@ export const StandaloneBanner: React.FC<StandaloneBannerProps> = ({
   return (
     <header className="w-full bg-[#050c08] border-b border-emerald-500/30 px-4 py-2.5 font-mono text-xs text-emerald-400 shadow-md">
       <div className="max-w-6xl mx-auto flex flex-wrap justify-between items-center gap-3">
-        {/* Left: Brand / Title */}
-        <div className="flex items-center gap-2.5">
-          <div className="w-7 h-7 rounded-lg bg-emerald-950 border border-emerald-500/50 flex items-center justify-center shadow-[0_0_10px_rgba(16,185,129,0.3)]">
-            <Atom size={18} className="text-emerald-300 animate-spin" style={{ animationDuration: '12s' }} />
+        {/* Left: Brand / Official Logo */}
+        <div className="flex items-center gap-3">
+          <div className="relative flex items-center justify-center">
+            <img
+              src="/logo.svg"
+              alt="Critical Mass Logo"
+              className="w-9 h-9 object-contain drop-shadow-[0_0_12px_rgba(16,185,129,0.6)]"
+            />
           </div>
           <div>
             <div className="flex items-center gap-2">
-              <span className="text-emerald-200 font-extrabold tracking-widest text-sm">
+              <span className="bg-gradient-to-r from-emerald-200 via-emerald-100 to-teal-300 bg-clip-text text-transparent font-black tracking-widest text-base drop-shadow-[0_0_8px_rgba(16,185,129,0.3)]">
                 CRITICAL MASS
               </span>
-              <span className="text-[10px] px-1.5 py-0.2 rounded bg-amber-500/20 text-amber-300 border border-amber-500/40 font-bold">
-                VOL.1 ENTRY
+              <span className="inline-flex items-center gap-1 text-[9px] px-1.5 py-0.5 rounded bg-emerald-950/80 text-emerald-400 border border-emerald-500/30 font-semibold tracking-wider">
+                <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
+                ONLINE
               </span>
             </div>
-            <div className="text-[10px] text-emerald-500/60 tracking-wider">
+            <div className="text-[10px] text-emerald-500/70 tracking-wider font-mono">
               TOROIDAL CASCADE CASINO // ON-CHAIN VRF
             </div>
           </div>
