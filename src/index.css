@@ -1,5 +1,6 @@
 /* src/index.css */
 @import url('https://fonts.googleapis.com/css2?family=Chakra+Petch:ital,wght@0,400;0,600;0,700;1,600&family=Share+Tech+Mono&display=swap');
+@import "tailwindcss";
 
 :root {
   font-family: 'Share Tech Mono', monospace, ui-monospace, monospace;

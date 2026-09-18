@@ -1,6 +1,5 @@
-// src/engine/reactorSimulation.ts
-import { FissionResult, MULTIPLIERS } from './types';
-import { decodeAbiParameters } from 'viem';
+import { MULTIPLIERS, type FissionResult } from './types.ts';
+import { safeDecodeOnChainResult } from './onChainResult.ts';
 
 export const PERCOLATION_THRESHOLD = 51;
 
@@ -99,40 +98,11 @@ export function simulateStandaloneRound(startChamber: number, wager: number): Fi
 }
 
 // Decodes raw on-chain gameState from CriticalMass.sol
-export function parseOnChainResult(gameStateHex: `0x${string}`, wagerHuman: number): FissionResult {
-  try {
-    const decoded = decodeAbiParameters(
-      [
-        { type: 'uint8', name: 'startChamber' },
-        { type: 'uint8', name: 'clusterSize' },
-        { type: 'uint16', name: 'visitedMask' },
-        { type: 'uint32', name: 'activeEdgeMask' },
-        { type: 'uint256', name: 'multiplierWad' },
-        { type: 'uint256', name: 'payout' },
-      ],
-      gameStateHex
-    );
-
-    const startChamber = Number(decoded[0]);
-    const clusterSize = Number(decoded[1]);
-    const visitedMask = Number(decoded[2]);
-    const activeEdgeMask = Number(decoded[3]);
-    const multiplier = Number(decoded[4]) / 1e18;
-    const payout = (wagerHuman * multiplier).toFixed(2);
-
-    const { stepSequence } = runFissionBFS(startChamber, activeEdgeMask);
-
-    return {
-      startChamber,
-      clusterSize,
-      breachedMask: visitedMask,
-      activeEdgeMask,
-      multiplier,
-      payout,
-      stepSequence,
-    };
-  } catch (err) {
-    console.error('Failed to decode on-chain gameState:', err);
-    return simulateStandaloneRound(0, wagerHuman);
-  }
+export function parseOnChainResult(
+  gameStateHex: `0x${string}`,
+  tokenDecimals = 18
+): FissionResult | null {
+  const decoded = safeDecodeOnChainResult(gameStateHex, tokenDecimals);
+  if (!decoded) return null;
+  return { ...decoded, stepSequence: runFissionBFS(decoded.startChamber, decoded.activeEdgeMask).stepSequence };
 }

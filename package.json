@@ -7,9 +7,12 @@
     "dev": "vite",
     "build": "tsc && vite build",
     "preview": "vite preview",
-    "test": "npm run test:rtp && npm run test:logic",
+    "test": "npm run test:rtp && npm run test:logic && npm run test:validation && npm run test:runtime-safety && npm run test:e2e",
     "test:rtp": "node scripts/verify-rtp.mjs",
-    "test:logic": "node scripts/test_contract_logic.mjs"
+    "test:logic": "node scripts/test_contract_logic.mjs",
+    "test:validation": "node --experimental-strip-types --test scripts/test_wager_validation.mjs",
+    "test:runtime-safety": "node --experimental-strip-types --test scripts/test_runtime_safety.mjs",
+    "test:e2e": "node --experimental-strip-types --test scripts/test_winning_round_e2e.mjs"
   },
   "dependencies": {
     "canvas-confetti": "^1.9.4",
@@ -20,11 +23,13 @@
     "viem": "^2.21.55"
   },
   "devDependencies": {
+    "@tailwindcss/vite": "^4.3.3",
     "@types/canvas-confetti": "^1.9.0",
     "@types/node": "^22.10.0",
     "@types/react": "^18.3.12",
     "@types/react-dom": "^18.3.1",
     "@vitejs/plugin-react": "^4.3.4",
+    "tailwindcss": "^4.3.3",
     "typescript": "^5.7.2",
     "vite": "^6.0.1"
   }

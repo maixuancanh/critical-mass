@@ -7,7 +7,7 @@ import { ICasinoGameV2, SessionContext, StepResult, SessionPhase } from "./ICasi
  * @title CriticalMass
  * @notice Nuclear Reactor Chain Reaction Casino Game
  * @dev Implements ICasinoGameV2 for Chain.wtf.
- *      Theoretical RTP: 96.0000% (Zero Wei Drift against 0.96 WAD).
+ *      Theoretical RTP: 96.0000% displayed; integer rounding is -1 wei from 0.96 WAD.
  *      Topology: 3x3 Torus Bond Percolation (18 edges).
  *      Randomness: Independent byte rejection threshold (< 51/256).
  */

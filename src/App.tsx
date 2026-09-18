@@ -9,15 +9,19 @@ import {
   simulateStandaloneRound,
   parseOnChainResult,
 } from './engine/reactorSimulation';
+import { validateWagerInput } from './engine/wagerValidation';
 import { FissionResult } from './engine/types';
+import { findRecoverableSession } from './bridge/sessionRecovery';
 import {
   connectGameToHost,
+  computeMaxWager,
+  observeGameContentSize,
   type GuestApiV1,
   type HostApiV1,
   type HostSnapshotV1,
 } from './bridge/guest';
 import confetti from 'canvas-confetti';
-import { encodeAbiParameters, parseUnits } from 'viem';
+import { encodeAbiParameters, formatUnits } from 'viem';
 import { Shield, Sparkles } from 'lucide-react';
 
 export const App: React.FC = () => {
@@ -46,12 +50,28 @@ export const App: React.FC = () => {
   const [lastPayout, setLastPayout] = useState<string | null>(null);
   const [lastMultiplier, setLastMultiplier] = useState<number | null>(null);
   const [isMeltdown, setIsMeltdown] = useState<boolean>(false);
+  const [settlementError, setSettlementError] = useState<string | null>(null);
 
   const activeSessionIdRef = useRef<string | null>(null);
+  const failedSessionRef = useRef<{ sessionKey: string; sessionId: string; gameState: `0x${string}` } | null>(null);
+
+  const handleRetrySettlement = () => {
+    if (!failedSessionRef.current || !snapshot) return;
+    const { gameState, sessionId } = failedSessionRef.current;
+    const result = parseOnChainResult(gameState, snapshot.token.decimals ?? 18);
+    if (!result) {
+      setSettlementError(`Session ${sessionId} settled, but its result could not be verified.`);
+      return;
+    }
+    setSettlementError(null);
+    failedSessionRef.current = null;
+    playReactionSequence(result, sessionId);
+  };
 
   // 1. Connect to Host or Fallback to Standalone Demo Mode
   useEffect(() => {
     let mounted = true;
+    let connection: ReturnType<typeof connectGameToHost> | null = null;
     const isInIframe = typeof window !== 'undefined' && window !== window.parent;
 
     if (!isInIframe) {
@@ -66,11 +86,10 @@ export const App: React.FC = () => {
       };
 
       try {
-        const connection = connectGameToHost(guestMethods);
+        connection = connectGameToHost(guestMethods);
+
         const timeout = setTimeout(() => {
-          if (mounted && !snapshot) {
-            setIsStandalone(true);
-          }
+          if (mounted && !snapshot) setIsStandalone(true);
         }, 2000);
 
         void connection.promise
@@ -93,29 +112,54 @@ export const App: React.FC = () => {
 
     return () => {
       mounted = false;
+      connection?.destroy();
       geigerAudio.stopBackground();
     };
   }, []);
 
-  // 2. Watch for Host Session Settled
+  useEffect(() => {
+    const observer = observeGameContentSize(hostApi);
+    return () => observer.disconnect();
+  }, [hostApi]);
+
+  // 2. Restore a pending host session after an iframe refresh.
+  useEffect(() => {
+    if (!snapshot || activeSessionIdRef.current) return;
+    const recoverable = findRecoverableSession(
+      snapshot.sessions.items,
+      snapshot.integration.gameAddress
+    );
+    if (recoverable) activeSessionIdRef.current = recoverable.sessionKey;
+  }, [snapshot]);
+
+  // 3. Watch for Host Session Settled
   useEffect(() => {
     if (!snapshot || !activeSessionIdRef.current) return;
 
     const currentSession = snapshot.sessions.items.find(
-      s => s.sessionId === activeSessionIdRef.current
+        s => s.sessionKey === activeSessionIdRef.current
     );
 
     if (currentSession && currentSession.isSettled && currentSession.raw.gameState) {
       activeSessionIdRef.current = null;
-      const result = parseOnChainResult(
-        currentSession.raw.gameState,
-        parseFloat(wager) || 10
-      );
+      const result = parseOnChainResult(currentSession.raw.gameState, snapshot.token.decimals ?? 18);
+      if (!result) {
+        failedSessionRef.current = {
+          sessionKey: currentSession.sessionKey,
+          sessionId: currentSession.sessionId,
+          gameState: currentSession.raw.gameState,
+        };
+        setSettlementError(`Session ${currentSession.sessionId} settled, but its result could not be verified.`);
+        setIsReacting(false);
+        return;
+      }
+      failedSessionRef.current = null;
+      setSettlementError(null);
       playReactionSequence(result, currentSession.sessionId);
     }
   }, [snapshot]);
 
-  // 3. Fission Reaction Animation Sequence
+  // 4. Fission Reaction Animation Sequence
   const playReactionSequence = async (result: FissionResult, sessionId?: string) => {
     setIsReacting(true);
     setBreachedChambers(new Set([result.startChamber]));
@@ -175,18 +219,28 @@ export const App: React.FC = () => {
     setIsReacting(false);
   };
 
-  // 4. Trigger Fission Action
+  // 5. Trigger Fission Action
   const handleTrigger = async () => {
     if (isReacting) return;
-    const wagerNum = parseFloat(wager) || 10;
-    const currentBalance = isStandalone
-      ? mockBalance
-      : parseFloat(snapshot?.balances.smartVaultBalance || '0');
-
-    if (wagerNum > currentBalance) {
-      alert('Insufficient USDC balance in vault!');
+    const decimals = snapshot?.token.decimals ?? 18;
+    const balanceBaseUnits = isStandalone
+      ? BigInt(Math.round(mockBalance * 10 ** decimals))
+      : BigInt(snapshot?.balances.smartVaultBalance || '0');
+    if (!maxWagerBaseUnits) {
+      setSettlementError('Vault wager limits are still loading. Please wait.');
       return;
     }
+    const wagerValidation = validateWagerInput(wager, {
+      balanceBaseUnits,
+      maxWagerBaseUnits,
+      tokenDecimals: decimals,
+    });
+    if (!wagerValidation.ok) {
+      alert(wagerValidation.error);
+      return;
+    }
+    const wagerNum = Number(formatUnits(wagerValidation.valueBaseUnits, decimals));
+    setSettlementError(null);
 
     geigerAudio.playDischarge();
 
@@ -198,12 +252,10 @@ export const App: React.FC = () => {
       // On-chain via Chain SDK Host
       try {
         setIsReacting(true);
-        const decimals = snapshot.token.decimals ?? 18;
-        const wagerWad = parseUnits(wager, decimals).toString();
         const gameData = encodeAbiParameters([{ type: 'uint8' }], [selectedChamber]);
 
         const { sessionKey } = await hostApi.openSession({
-          wager: wagerWad,
+          wager: wagerValidation.valueBaseUnits.toString(),
           gameData,
         });
 
@@ -217,9 +269,21 @@ export const App: React.FC = () => {
 
   const walletBalance = isStandalone
     ? mockBalance.toString()
-    : snapshot?.balances.smartVaultBalance || '0';
+    : snapshot
+      ? formatUnits(BigInt(snapshot.balances.smartVaultBalance || '0'), snapshot.token.decimals ?? 18)
+      : '0';
 
-  const isWalletReady = isStandalone ? true : snapshot?.wallet.status === 'ready';
+  const maxWagerBaseUnits = (() => {
+    if (isStandalone) return 500_000_000_000_000_000_000n;
+    if (!snapshot) return null;
+    const result = computeMaxWager(snapshot, { maxMultiplierX: 49.250439152323925 });
+    return result.kind === 'limit' ? result.maxWager : null;
+  })();
+  const platformMaxWager = maxWagerBaseUnits
+    ? formatUnits(maxWagerBaseUnits, snapshot?.token.decimals ?? 18)
+    : '—';
+
+  const isWalletReady = isStandalone ? true : snapshot?.wallet.status === 'ready' && maxWagerBaseUnits !== null;
 
   return (
     <div className="min-h-screen nuclear-facility-bg text-emerald-300 flex flex-col font-mono selection:bg-emerald-500 selection:text-black">
@@ -268,11 +332,14 @@ export const App: React.FC = () => {
               onTrigger={handleTrigger}
               walletBalance={walletBalance}
               isWalletReady={isWalletReady}
-              maxWager="500"
+              maxWager={platformMaxWager.toString()}
               lastPayout={lastPayout}
               lastMultiplier={lastMultiplier}
               isMeltdown={isMeltdown}
               clusterSize={liveClusterSize}
+              settlementError={settlementError}
+              onRetrySettlement={handleRetrySettlement}
+              isRiskCapLoading={!isStandalone && maxWagerBaseUnits === null}
             />
 
             <PayoutLadder
@@ -293,7 +360,7 @@ export const App: React.FC = () => {
           <div className="flex flex-wrap gap-4 text-[11px]">
             <span>THEORETICAL RTP: <strong className="text-emerald-300">96.0000%</strong></span>
             <span>VRF: <strong className="text-emerald-300">UNBIASED REJECTION</strong></span>
-            <span>DRIFT: <strong className="text-emerald-300">ZERO WEI (-1 wei)</strong></span>
+            <span>INTEGER DRIFT: <strong className="text-emerald-300">-1 wei</strong></span>
           </div>
         </footer>
       </main>

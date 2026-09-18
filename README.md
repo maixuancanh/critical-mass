@@ -3,7 +3,7 @@
 > **A Provably Fair Nuclear Reactor Chain Reaction Casino Game built on Chain Casino SDK (Base L2)**
 
 [![RTP: 96.00%](https://img.shields.io/badge/Theoretical%20RTP-96.00%25-brightgreen)](scripts/verify-rtp.mjs)
-[![Drift: 0 wei](https://img.shields.io/badge/Precision-Zero%20Wei%20Drift-blue)](scripts/verify-rtp.mjs)
+[![Integer drift: -1 wei](https://img.shields.io/badge/Integer%20drift--1%20wei-blue)](scripts/verify-rtp.mjs)
 [![Chain SDK](https://img.shields.io/badge/Chain%20Casino%20SDK-ICasinoGameV2-orange)](contracts/CriticalMass.sol)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 
@@ -22,7 +22,7 @@ Unlike traditional casino games or clone mechanics (forbidden by Chain Jam rules
 
 ---
 
-## 2. Certified Mathematical Proof & Paytable (Zero Wei Drift)
+## 2. Certified Mathematical Proof & Paytable
 
 CRITICAL MASS is built upon an **exact combinatorial state enumeration** across all $2^{18} = 262,144$ possible network states on a 3×3 torus. Due to toroidal topological symmetry, every starting chamber has the exact same probability distribution.
 
@@ -42,8 +42,8 @@ CRITICAL MASS is built upon an **exact combinatorial state enumeration** across 
 
 $$\mathbf{Total\ Theoretical\ RTP} = \sum_{k=1}^9 P(k) \times Multiplier(k) = \mathbf{96.000000\%}$$
 
-* **Drift from 0.96 WAD**: **-1 wei** (mathematically pure zero drift).
-* **Monte Carlo Verification**: 1,000,000 rounds simulated in `scripts/verify-rtp.mjs` confirm empirical convergence to $96.12\%$ with Chi-Square statistic $\chi^2 = 7.76$ ($df=8$, critical value $15.51$, $p > 0.45$).
+* **Integer drift from 0.96 WAD**: **-1 wei** due to integer division truncation (the displayed RTP rounds to 96.000000%).
+* **Monte Carlo Verification**: `scripts/verify-rtp.mjs` simulates 1,000,000 rounds and checks that the measured distribution remains within statistical tolerance; the measured RTP varies naturally from run to run.
 
 ---
 
@@ -56,7 +56,8 @@ critical-mass/
 │   └── CriticalMass.sol          # Production Solidity contract (instant game, gas ~38k)
 ├── scripts/
 │   ├── verify-rtp.mjs            # Combinatorial 262k enumeration & 1M Monte Carlo proof
-│   └── test_contract_logic.mjs   # Verified equivalence between Solidity BFS and JS
+│   ├── test_contract_logic.mjs   # Verified equivalence between Solidity BFS and JS
+│   └── test_wager_validation.mjs # Rejects invalid, oversized, and unfunded wagers
 ├── public/
 │   ├── game.manifest.json        # Canonical game manifest for Chain host
 │   └── favicon.svg               # Vector nuclear hazard badge
@@ -78,6 +79,8 @@ critical-mass/
 │   └── index.css                 # 1980s Phosphor terminal styling
 └── index.html                    # Embeds required Jam widget script tag
 ```
+
+Local Chain Casino SDK simulator evidence is recorded in [docs/LOCAL_SIMULATOR_E2E.md](docs/LOCAL_SIMULATOR_E2E.md).
 
 ---
 
@@ -112,7 +115,7 @@ node scripts/test_contract_logic.mjs
 npm install
 npm run dev
 ```
-Open **http://localhost:5173** in your browser.
+Open **http://localhost:3300** in your browser.
 
 ---
 
@@ -121,4 +124,4 @@ Open **http://localhost:5173** in your browser.
 * **Game Title**: Critical Mass
 * **Declared RTP**: 96.00%
 * **Pitch**:
-> Critical Mass is an original on-chain nuclear cascade casino game built on the Chain Casino SDK. Players target an injection chamber on a 3×3 toroidal reactor core and trigger a neutron pulse. 18 energy conduits undergo unbiased VRF rejection sampling to determine fission pathways. With an exact 262,144-state combinatorial proof, zero-wei drift against 96.00% RTP, and an escalating procedural Geiger audio engine, players chase an exhilarating 49.25x Critical Meltdown Jackpot. Built with hand-crafted CRT phosphor aesthetics, no AI slop, and instant standalone demo playability.
+> Critical Mass is an original on-chain nuclear cascade casino game built on the Chain Casino SDK. Players target an injection chamber on a 3×3 toroidal reactor core and trigger a neutron pulse. 18 energy conduits undergo unbiased VRF rejection sampling to determine fission pathways. With an exact 262,144-state combinatorial proof, an integer-rounding drift of only -1 wei from the 96.00% RTP target, and an escalating procedural Geiger audio engine, players chase an exhilarating 49.25x Critical Meltdown Jackpot. Built with hand-crafted CRT phosphor aesthetics, no AI slop, and instant standalone demo playability.

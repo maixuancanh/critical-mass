@@ -17,6 +17,9 @@ interface ControlPanelProps {
   lastMultiplier: number | null;
   isMeltdown: boolean;
   clusterSize: number;
+  settlementError: string | null;
+  onRetrySettlement?: () => void;
+  isRiskCapLoading?: boolean;
 }
 
 export const ControlPanel: React.FC<ControlPanelProps> = ({
@@ -33,6 +36,9 @@ export const ControlPanel: React.FC<ControlPanelProps> = ({
   lastMultiplier,
   isMeltdown,
   clusterSize,
+  settlementError,
+  onRetrySettlement,
+  isRiskCapLoading,
 }) => {
   const [isMuted, setIsMuted] = useState(geigerAudio.getMuted());
 
@@ -54,10 +60,10 @@ export const ControlPanel: React.FC<ControlPanelProps> = ({
   };
 
   const adjustWager = (factor: number) => {
-    if (isReacting) return;
+    if (isReacting || isRiskCapLoading) return;
     geigerAudio.playSwitchClunk();
     const cur = parseFloat(wager) || 1;
-    const max = parseFloat(maxWager) || 500;
+    const max = maxWager === '—' ? 500 : (parseFloat(maxWager) || 500);
     const next = Math.max(1, Math.min(max, Math.round(cur * factor)));
     setWager(next.toString());
   };
@@ -174,10 +180,12 @@ export const ControlPanel: React.FC<ControlPanelProps> = ({
         <div className="flex gap-2">
           <div className="relative flex-1">
             <input
+              id="wager-input"
+              name="wager"
               type="number"
               min="1"
               max={maxWager}
-              step="1"
+              step="0.01"
               disabled={isReacting}
               value={wager}
               onChange={e => setWager(e.target.value)}
@@ -204,7 +212,7 @@ export const ControlPanel: React.FC<ControlPanelProps> = ({
           </button>
           <button
             disabled={isReacting}
-            onClick={() => setWager(Math.min(500, parseFloat(walletBalance) || 500).toFixed(0))}
+            onClick={() => setWager(maxWager === '—' ? wager : maxWager)}
             className="px-3 py-2 text-xs font-bold bg-emerald-950/40 border border-emerald-800/60 rounded-lg hover:bg-emerald-900/40 text-emerald-300 transition"
           >
             MAX
@@ -232,7 +240,22 @@ export const ControlPanel: React.FC<ControlPanelProps> = ({
 
       {/* Permanent Fixed-Height Status / Outcome Telemetry Box (Prevents any layout shift) */}
       <div className="h-[68px] min-h-[68px] max-h-[68px] w-full">
-        {isReacting ? (
+        {settlementError ? (
+          <div className="h-full p-2.5 rounded-lg border border-rose-500/50 bg-rose-950/40 text-rose-200 flex flex-col justify-center font-mono">
+            <div className="flex items-center justify-between text-xs font-bold text-rose-300">
+              <span>SESSION VERIFICATION REQUIRED</span>
+              {onRetrySettlement && (
+                <button
+                  onClick={onRetrySettlement}
+                  className="px-2 py-0.5 rounded bg-rose-900 hover:bg-rose-800 text-rose-100 border border-rose-600 text-[10px] font-bold transition cursor-pointer"
+                >
+                  [RETRY VERIFICATION]
+                </button>
+              )}
+            </div>
+            <div className="text-[10px] mt-1 text-rose-200/80 truncate">{settlementError}</div>
+          </div>
+        ) : isReacting ? (
           <div className="h-full p-2.5 rounded-lg border border-amber-500/50 bg-amber-950/40 text-amber-300 flex flex-col justify-center font-mono shadow-[0_0_15px_rgba(245,158,11,0.2)]">
             <div className="flex items-center justify-between text-xs font-bold">
               <span className="flex items-center gap-1.5 animate-pulse text-amber-300">
@@ -303,11 +326,13 @@ export const ControlPanel: React.FC<ControlPanelProps> = ({
       {/* Heavy Industrial Trigger Button (Fixed Height) */}
       <div className="relative pt-1">
         <button
-          disabled={isReacting || !isWalletReady}
+          disabled={isReacting || !isWalletReady || isRiskCapLoading}
           onClick={onTrigger}
           className={`w-full h-14 px-4 rounded-xl font-bold text-sm tracking-widest uppercase transition-all duration-150 flex items-center justify-center gap-3 border-2 shadow-lg ${
             isReacting
               ? 'bg-amber-600/30 border-amber-500 text-amber-300 cursor-not-allowed animate-pulse shadow-[0_0_20px_rgba(245,158,11,0.4)]'
+              : isRiskCapLoading
+              ? 'bg-zinc-900 border-amber-700 text-amber-400 cursor-not-allowed animate-pulse'
               : !isWalletReady
               ? 'bg-zinc-900 border-zinc-700 text-zinc-500 cursor-not-allowed'
               : 'bg-gradient-to-r from-emerald-500 via-teal-400 to-emerald-500 border-emerald-300 text-black hover:from-emerald-400 hover:to-teal-300 shadow-[0_0_30px_rgba(16,185,129,0.7)] active:scale-95 active:shadow-[0_0_15px_rgba(16,185,129,0.9)]'
@@ -317,6 +342,8 @@ export const ControlPanel: React.FC<ControlPanelProps> = ({
           <span>
             {isReacting
               ? 'CASCADE IN PROGRESS...'
+              : isRiskCapLoading
+              ? 'LOADING VAULT RISK CAP...'
               : !isWalletReady
               ? 'AWAITING WALLET...'
               : `TRIGGER FISSION // ${wager} USDC`}
